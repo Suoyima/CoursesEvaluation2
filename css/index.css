@@ -191,3 +191,38 @@ a:hover {
 .float-button i {
     font-size: 24px;
 }
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #586069;
+}
+
+.error-message {
+    color: #cb2431;
+    padding: 16px;
+    background-color: #ffeef0;
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.pagination button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    background-color: #f6f8fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.pagination button.active {
+    background-color: #0366d6;
+    color: white;
+    border-color: #0366d6;
+}

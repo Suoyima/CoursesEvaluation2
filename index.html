@@ -16,130 +16,43 @@
     <!-- 搜索区域 -->
     <div class="search-container">
         <div class="search-tabs">
-            <div class="search-tab active">按课程名称</div>
-            <div class="search-tab">按教师名称</div>
+            <div class="search-tab active" data-type="course">按课程名称</div>
+            <div class="search-tab" data-type="teacher">按教师名称</div>
         </div>
-        <input type="text" class="search-input" placeholder="搜索课程...">
+        <input type="text" class="search-input" placeholder="搜索课程..." id="searchInput">
     </div>
     
     <!-- 主要内容区域 -->
     <div class="container">
         <!-- 左侧筛选栏 -->
-        <div class="sidebar">
+        <div class="sidebar" id="sidebarFilters">
+            <!-- 筛选条件将通过JS动态加载 -->
             <div class="filter-section">
                 <div class="filter-title">学院</div>
-                <div class="filter-option">
-                    <input type="checkbox" id="college-1">
-                    <label for="college-1">计算机学院</label>
-                </div>
-                <div class="filter-option">
-                    <input type="checkbox" id="college-2">
-                    <label for="college-2">经济学院</label>
-                </div>
-                <div class="filter-option">
-                    <input type="checkbox" id="college-3">
-                    <label for="college-3">文学院</label>
+                <div id="departmentFilters">
+                    <!-- 部门筛选选项将通过JS动态加载 -->
                 </div>
             </div>
             
             <div class="filter-section">
-                <div class="filter-title">专业</div>
-                <div class="filter-option">
-                    <input type="checkbox" id="major-1">
-                    <label for="major-1">计算机科学与技术</label>
-                </div>
-                <div class="filter-option">
-                    <input type="checkbox" id="major-2">
-                    <label for="major-2">软件工程</label>
-                </div>
-                <div class="filter-option">
-                    <input type="checkbox" id="major-3">
-                    <label for="major-3">经济学</label>
+                <div class="filter-title">评分范围</div>
+                <div id="ratingFilters">
+                    <!-- 评分筛选选项将通过JS动态加载 -->
                 </div>
             </div>
             
             <div class="filter-section">
                 <div class="filter-title">学分</div>
-                <div class="filter-option">
-                    <input type="checkbox" id="credit-1">
-                    <label for="credit-1">1学分</label>
-                </div>
-                <div class="filter-option">
-                    <input type="checkbox" id="credit-2">
-                    <label for="credit-2">2学分</label>
-                </div>
-                <div class="filter-option">
-                    <input type="checkbox" id="credit-3">
-                    <label for="credit-3">3学分</label>
-                </div>
-            </div>
-            
-            <div class="filter-section">
-                <div class="filter-title">评分</div>
-                <div class="filter-option">
-                    <input type="checkbox" id="rating-1">
-                    <label for="rating-1">4星及以上</label>
-                </div>
-                <div class="filter-option">
-                    <input type="checkbox" id="rating-2">
-                    <label for="rating-2">3星及以上</label>
-                </div>
-                <div class="filter-option">
-                    <input type="checkbox" id="rating-3">
-                    <label for="rating-3">2星及以上</label>
+                <div id="creditFilters">
+                    <!-- 学分筛选选项将通过JS动态加载 -->
                 </div>
             </div>
         </div>
         
         <!-- 课程内容区域 -->
-        <div class="content">
-            <div class="course-card">
-                <div class="course-header">
-                    <a href="#" class="course-title">数据结构与算法</a>
-                    <div class="rating">★★★★☆</div>
-                </div>
-                <div class="course-meta">
-                    计算机学院 · 计算机科学与技术 · 王教授 · 3学分
-                </div>
-                <div class="course-description">
-                    这门课程涵盖了基本的数据结构和算法，包括链表、树、图、排序和搜索算法等。课程难度适中，作业量合理，期末考试有一定挑战性。
-                </div>
-                <div class="course-footer">
-                    <span>发布于 3天前</span>
-                </div>
-            </div>
-            
-            <div class="course-card">
-                <div class="course-header">
-                    <a href="#" class="course-title">微观经济学</a>
-                    <div class="rating">★★★★★</div>
-                </div>
-                <div class="course-meta">
-                    经济学院 · 经济学 · 李教授 · 2学分
-                </div>
-                <div class="course-description">
-                    李教授的微观经济学课程讲解非常清晰，案例丰富，能够很好地帮助学生理解经济学原理。课堂互动多，考试难度适中。
-                </div>
-                <div class="course-footer">
-                    <span>发布于 1周前</span>
-                </div>
-            </div>
-            
-            <div class="course-card">
-                <div class="course-header">
-                    <a href="#" class="course-title">中国现代文学</a>
-                    <div class="rating">★★★☆☆</div>
-                </div>
-                <div class="course-meta">
-                    文学院 · 汉语言文学 · 张教授 · 2学分
-                </div>
-                <div class="course-description">
-                    课程内容涵盖了中国现代文学的主要流派和作家作品，阅读量较大，需要写两篇论文作为考核。教授讲课比较传统，课堂互动较少。
-                </div>
-                <div class="course-footer">
-                    <span>发布于 2周前</span>
-                </div>
-            </div>
+        <div class="content" id="courseList">
+            <!-- 课程卡片将通过JS动态加载 -->
+            <div class="loading">加载中...</div>
         </div>
     </div>
     
@@ -148,6 +61,8 @@
         <i>+</i>
     </div>
     
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/index.js"></script>
 </body>
 </html>
