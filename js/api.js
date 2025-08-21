@@ -1,112 +1,84 @@
-// API请求封装
-const API_BASE_URL = '/api';
-
-/**
- * 获取最新课程评价列表
- * @param {number} limit - 返回的评价数量
- * @param {number} offset - 分页偏移量
- * @returns {Promise} 包含评价列表的Promise
- */
-export const getLatestReviews = async (limit = 10, offset = 0) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/reviews/latest?limit=${limit}&offset=${offset}`);
-        if (!response.ok) {
-            throw new Error('获取评价列表失败');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('获取最新评价列表出错:', error);
-        throw error;
-    }
+// 配置
+const API_BASE_URL = 'http://localhost:5000/api';
+const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
 };
 
 /**
- * 获取筛选条件
- * @returns {Promise} 包含筛选条件的Promise
+ * 统一请求处理器
+ * @param {string} endpoint - API端点路径（如 '/user/info'）
+ * @param {string} method - HTTP方法
+ * @param {object} [body] - 请求体
+ * @param {object} [query] - 查询参数
  */
-export const getFilterOptions = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/filters`);
-        if (!response.ok) {
-            throw new Error('获取筛选条件失败');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('获取筛选条件出错:', error);
-        throw error;
+async function request(endpoint, method = 'GET', { body, query } = {}) {
+  // 构建完整URL
+  const url = new URL(`${API_BASE_URL}${endpoint}`);
+  
+  // 添加查询参数
+  if (query) {
+    Object.entries(query).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.append(key, value);
+      }
+    });
+  }
+
+  const config = {
+    method,
+    headers: DEFAULT_HEADERS,
+    credentials: 'include', // 跨域携带cookie
+    body: body ? JSON.stringify(body) : undefined
+  };
+
+  try {
+    const response = await fetch(url, config);
+    
+    // 处理非200响应
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || 
+        `请求失败: ${response.status} ${response.statusText}`
+      );
     }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`API请求错误 [${method} ${endpoint}]:`, error);
+    throw error;
+  }
+}
+
+// 用户相关API
+export const getUserInfo = () => request('/user/info');
+
+// 课程评价API
+export const getLatestReviews = (limit = 10, offset = 0, filters = {}) => {
+    const query = { limit, offset };
+    
+    // 添加筛选参数
+    if (filters.department && filters.department.length > 0) {
+        query.department = filters.department.join(',');
+    }
+    if (filters.min_rating) {
+        query.min_rating = filters.min_rating;
+    }
+    // 可以添加其他筛选条件...
+    
+    return request('/reviews/latest', 'GET', { query });
 };
 
-/**
- * 搜索课程
- * @param {Object} params - 搜索参数
- * @returns {Promise} 包含搜索结果Promise
- */
-export const searchCourses = async (params = {}) => {
-    try {
-        const queryString = new URLSearchParams(params).toString();
-        const response = await fetch(`${API_BASE_URL}/courses/search?${queryString}`);
-        if (!response.ok) {
-            throw new Error('搜索课程失败');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('搜索课程出错:', error);
-        throw error;
-    }
-};
+export const getCourseReviews = (courseId, limit = 10, offset = 0) =>
+  request(`/courses/${courseId}/reviews`, 'GET', { query: { limit, offset } });
 
-/**
- * 获取课程详情
- * @param {number} id - 课程ID
- * @returns {Promise} 包含课程详情的Promise
- */
-export const getCourseDetail = async (id) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/courses/${id}`);
-        if (!response.ok) {
-            throw new Error('获取课程详情失败');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('获取课程详情出错:', error);
-        throw error;
-    }
-};
+// 课程相关API
+export const getCourseDetail = (courseId) => 
+  request(`/courses/${courseId}`);
 
-/**
- * 获取课程评价列表
- * @param {number} id - 课程ID
- * @param {number} limit - 每页数量
- * @param {number} offset - 偏移量
- * @returns {Promise} 包含评价列表的Promise
- */
-export const getCourseReviews = async (id, limit = 10, offset = 0) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/courses/${id}/reviews?limit=${limit}&offset=${offset}`);
-        if (!response.ok) {
-            throw new Error('获取课程评价失败');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('获取课程评价出错:', error);
-        throw error;
-    }
-};
+export const searchCourses = (params) => 
+  request('/courses/search', 'GET', { query: params });
 
-/**
- * 获取当前用户信息
- * @returns {Promise} 包含用户信息的Promise
- */
-export const getUserInfo = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/user/info`);
-        if (!response.ok) {
-            throw new Error('获取用户信息失败');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('获取用户信息出错:', error);
-        throw error;
-    }
-};
+// 筛选条件
+export const getFilterOptions = () => request('/filters');

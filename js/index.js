@@ -86,25 +86,29 @@ async function loadLatestReviews() {
     }
 }
 
-// 搜索课程
+// 搜索评价
 async function searchCoursesWithParams(params) {
     try {
         isSearching = true;
         courseList.innerHTML = '<div class="loading">加载中...</div>';
         
-        const result = await searchCourses(params);
-        renderCourseList(result.courses);
+        const result = await getLatestReviews(
+            itemsPerPage, 
+            (currentPage - 1) * itemsPerPage,
+            params // 将筛选参数传递给获取评价的函数
+        );
         
-        // 可以添加分页逻辑
+        renderCourseList(result.reviews); // 渲染评价列表
+        
     } catch (error) {
-        throw new Error('搜索课程失败: ' + error.message);
+        throw new Error('获取评价列表失败: ' + error.message);
     }
 }
 
 // 渲染课程列表
 function renderCourseList(items) {
     if (items.length === 0) {
-        courseList.innerHTML = '<div class="error-message">没有找到相关课程</div>';
+        courseList.innerHTML = '<div class="error-message">没有找到相关评价</div>';
         return;
     }
     
@@ -113,33 +117,19 @@ function renderCourseList(items) {
         const courseCard = document.createElement('div');
         courseCard.className = 'course-card';
         
-        // 判断是课程还是评价
-        if (item.course_name) {
-            // 评价卡片
-            courseCard.innerHTML = `
-                <div class="course-header">
-                    <a href="/course.html?id=${item.course_id}" class="course-title">${item.course_name}</a>
-                    <div class="rating">${generateRatingStars(item.rating)}</div>
-                </div>
-                <div class="course-description">
-                    ${item.content}
-                </div>
-                <div class="course-footer">
-                    <span>发布于 ${formatDate(item.created_at)}</span>
-                </div>
-            `;
-        } else {
-            // 课程卡片
-            courseCard.innerHTML = `
-                <div class="course-header">
-                    <a href="/course.html?id=${item.id}" class="course-title">${item.name}</a>
-                    <div class="rating">${generateRatingStars(item.avg_rating)}</div>
-                </div>
-                <div class="course-meta">
-                    ${item.department} · ${item.credit}学分
-                </div>
-            `;
-        }
+        // 确保只处理评价卡片格式
+        courseCard.innerHTML = `
+            <div class="course-header">
+                <a href="/course.html?id=${item.course_id}" class="course-title">${item.course_name}</a>
+                <div class="rating">${generateRatingStars(item.rating)}</div>
+            </div>
+            <div class="course-description">
+                ${item.content}
+            </div>
+            <div class="course-footer">
+                <span>发布于 ${formatDate(item.created_at)}</span>
+            </div>
+        `;
         
         courseList.appendChild(courseCard);
     });
@@ -149,24 +139,25 @@ function renderCourseList(items) {
 async function checkLoginStatus() {
     try {
         const userInfo = await getUserInfo();
-        // 更新用户头像等
         if (userInfo.avatar) {
             userAvatar.src = userInfo.avatar;
         }
+        
+        // 登录状态下，浮动按钮直接跳转评价页
+        document.querySelector('.float-button-link').href = 'review.html';
     } catch (error) {
-        // 未登录或获取用户信息失败
-        console.log('用户未登录或获取信息失败:', error.message);
+        // 未登录状态下，浮动按钮跳转登录页
+        document.querySelector('.float-button-link').href = 'login.html?redirect=review.html';
     }
 }
 
 // 事件处理函数
 function handleFilterChange(event) {
     const filters = {
-        keyword: searchInput.value.trim(),
+        // 保留原有的筛选参数
         department: [],
         min_rating: null,
-        max_rating: null,
-        credit: []
+        max_rating: null
     };
     
     // 获取选中的学院
@@ -185,14 +176,8 @@ function handleFilterChange(event) {
         }
     });
     
-    // 更新搜索参数
-    currentSearchParams = filters;
-    
-    if (isSearching || searchInput.value.trim() || filters.department.length || filters.min_rating) {
-        searchCoursesWithParams(currentSearchParams);
-    } else {
-        loadLatestReviews();
-    }
+    // 直接调用修改后的 searchCoursesWithParams
+    searchCoursesWithParams(filters);
 }
 
 // 搜索输入事件
@@ -222,12 +207,15 @@ userAvatar.addEventListener('click', function() {
 });
 
 // 浮动按钮点击
-floatButton.addEventListener('click', function() {
-    // 这里应该检查用户是否登录
-    // 如果未登录，跳转到登录页面
-    window.location.href = '/login';
-    // 如果已登录，跳转到写评价页面
-    // window.location.href = '/review/new';
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // 检查用户登录状态
+        await checkLoginStatus();
+        
+        // 其他初始化代码...
+    } catch (error) {
+        console.log('用户未登录:', error.message);
+    }
 });
 
 // 显示错误
