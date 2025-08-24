@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发布课程评价</title>
+    <link rel="stylesheet" href="css/review.css">
+</head>
+<body>
+    <div class="review-container">
+        <div class="review-header">
+            <h1>发布课程评价</h1>
+            <a href="/index.html" class="back-link">← 返回首页</a>
+        </div>
+        
+        <!-- 课程选择区域 -->
+        <div class="form-section">
+            <h2>1. 选择课程</h2>
+            <div class="search-box">
+                <input type="text" id="courseSearch" placeholder="搜索课程名称...">
+                <div id="courseResults" class="course-results"></div>
+            </div>
+            <div id="selectedCourse" class="selected-course"></div>
+        </div>
+        
+        <!-- 评价表单 -->
+        <div class="form-section">
+            <h2>2. 填写评价</h2>
+            <form id="reviewForm">
+                <div class="rating-item">
+                    <label>课程评分 (1-5星)</label>
+                    <div class="star-rating" id="ratingStars">
+                        <span data-value="1">☆</span>
+                        <span data-value="2">☆</span>
+                        <span data-value="3">☆</span>
+                        <span data-value="4">☆</span>
+                        <span data-value="5">☆</span>
+                    </div>
+                    <input type="hidden" id="ratingValue" name="rating" required>
+                </div>
+                
+                <div class="rating-item">
+                    <label>课程难度 (1-5分，1表示非常简单，5表示非常难)</label>
+                    <div class="number-rating">
+                        <input type="number" id="difficulty" name="difficulty" min="1" max="5" value="3" required>
+                    </div>
+                </div>
+                
+                <div class="rating-item">
+                    <label>给分情况 (1-5分，1表示给分严格，5表示给分宽松)</label>
+                    <div class="number-rating">
+                        <input type="number" id="grading" name="grading" min="1" max="5" value="3" required>
+                    </div>
+                </div>
+                
+                <div class="rating-item">
+                    <label>收获程度 (1-5分，1表示收获很小，5表示收获很大)</label>
+                    <div class="number-rating">
+                        <input type="number" id="harvest" name="harvest" min="1" max="5" value="3" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reviewContent">详细评价 (至少10个字符)</label>
+                    <textarea id="reviewContent" name="content" rows="6" placeholder="请分享您对这门课程的真实感受..." required></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn">发布评价</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="js/review.js"></script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程详情</title>
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        .course-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .course-header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e1e4e8;
+            padding-bottom: 20px;
+        }
+        
+        .course-title {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #24292e;
+        }
+        
+        .course-meta {
+            color: #586069;
+            margin-bottom: 15px;
+        }
+        
+        .course-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            min-width: 80px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0366d6;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #586069;
+        }
+        
+        .reviews-section {
+            margin-top: 30px;
+        }
+        
+        .review-item {
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .review-user {
+            font-weight: 600;
+            color: #0366d6;
+        }
+        
+        .review-date {
+            color: #586069;
+            font-size: 14px;
+        }
+        
+        .review-rating {
+            color: #f1e05a;
+            font-size: 18px;
+        }
+        
+        .review-content {
+            margin-top: 10px;
+        }
+        
+        .review-form {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f6f8fa;
+            border-radius: 6px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .rating-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .rating-input select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #e1e4e8;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+            min-height: 100px;
+        }
+        
+        .submit-btn {
+            background-color: #2ea44f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .submit-btn:hover {
+            background-color: #2c974b;
+        }
+        
+        .error-message {
+            color: #cb2431;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="logo">课程详情</div>
+    </header>
+    
+    <!-- 主要内容区域 -->
+    <div class="course-container">
+        <div class="course-header">
+            <h1 class="course-title" id="courseTitle">课程名称</h1>
+            <div class="course-meta">
+                <span id="courseDepartment">学院</span> · 
+                <span id="courseCredit">学分</span>学分
+            </div>
+            
+            <div class="course-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="avgRating">0.0</div>
+                    <div class="stat-label">平均评分</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="reviewCount">0</div>
+                    <div class="stat-label">评价数量</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgDifficulty">0.0</div>
+                    <div class="stat-label">平均难度</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 课程评价 -->
+        <div class="reviews-section">
+            <h2>课程评价</h2>
+            
+            <div id="reviewsList">
+                <!-- 评价列表将通过JS动态加载 -->
+                <div class="loading">加载中...</div>
+            </div>
+            
+            <!-- 评价表单 (仅登录用户可见) -->
+            <div id="reviewFormContainer" class="review-form" style="display: none;">
+                <h3>发表评价</h3>
+                <form id="reviewForm">
+                    <div class="form-group">
+                        <label>评分</label>
+                        <div class="rating-input">
+                            <select id="rating" required>
+                                <option value="">请选择</option>
+                                <option value="1">1星</option>
+                                <option value="2">2星</option>
+                                <option value="3">3星</option>
+                                <option value="4">4星</option>
+                                <option value="5">5星</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>难度 (1-5分，1表示非常简单)</label>
+                        <div class="rating-input">
+                            <select id="difficulty" required>
+                                <option value="">请选择</option>
+                                <option value="1">1分</option>
+                                <option value="2">2分</option>
+                                <option value="3">3分</option>
+                                <option value="4">4分</option>
+                                <option value="5">5分</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>给分情况 (1-5分，1表示给分严格)</label>
+                        <div class="rating-input">
+                            <select id="grading" required>
+                                <option value="">请选择</option>
+                                <option value="1">1分</option>
+                                <option value="2">2分</option>
+                                <option value="3">3分</option>
+                                <option value="4">4分</option>
+                                <option value="5">5分</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>收获程度 (1-5分，1表示收获很小)</label>
+                        <div class="rating-input">
+                            <select id="harvest" required>
+                                <option value="">请选择</option>
+                                <option value="1">1分</option>
+                                <option value="2">2分</option>
+                                <option value="3">3分</option>
+                                <option value="4">4分</option>
+                                <option value="5">5分</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="content">详细评价</label>
+                        <textarea id="content" required placeholder="请分享您对这门课程的真实感受..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">提交评价</button>
+                    <div id="formError" class="error-message"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="js/course.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的评价</title>
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        .review-item {
+            background-color: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .review-course {
+            font-weight: 600;
+            color: #0366d6;
+        }
+        
+        .review-meta {
+            color: #586069;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .review-content {
+            margin-bottom: 12px;
+        }
+        
+        .review-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #586069;
+        }
+        
+        .delete-btn {
+            color: #cb2431;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .delete-btn:hover {
+            background-color: #ffeef0;
+        }
+        
+        .no-reviews {
+            text-align: center;
+            padding: 40px;
+            color: #586069;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="logo">我的评价</div>
+        
+    </header>
+    
+    <!-- 主要内容区域 -->
+    <div class="container">
+        <div class="content" id="reviewsList">
+            <div class="loading">加载中...</div>
+        </div>
+    </div>
+    
+    <script type="module" src="js/my-reviews.js"></script>
+    <script type="module" src="js/utils.js"></script>
+    <script type="module" src="js/api.js"></script>
+</body>
+</html>
