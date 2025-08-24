@@ -33,17 +33,15 @@ export const formatDate = (dateString) => {
  */
 export const generateRatingStars = (rating) => {
     const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-    
     let stars = '';
+    
+    // 添加实心星
     for (let i = 0; i < fullStars; i++) {
         stars += '★';
     }
-    if (hasHalfStar) {
-        stars += '☆';
-    }
-    for (let i = 0; i < emptyStars; i++) {
+    
+    // 添加空心星
+    for (let i = fullStars; i < 5; i++) {
         stars += '☆';
     }
     
@@ -57,5 +55,12 @@ export const generateRatingStars = (rating) => {
  */
 export const handleApiError = (error) => {
     console.error('API请求出错:', error);
-    return error.message || '请求失败，请稍后重试';
+    
+    if (error.message.includes('Failed to fetch')) {
+        return '网络连接失败，请检查网络设置';
+    } else if (error.message.includes('401')) {
+        return '登录已过期，请重新登录';
+    } else {
+        return error.message || '请求失败，请稍后重试';
+    }
 };
