@@ -87,6 +87,13 @@ function renderFilterOptions(filters) {
     // 渲染评分筛选
     const ratingFilters = document.getElementById('ratingFilters');
     ratingFilters.innerHTML = '';
+	const noneOption = document.createElement('div');
+    noneOption.className = 'filter-option';
+    noneOption.innerHTML = `
+        <input type="radio" id="rating-none" value="" name="rating" checked>
+        <label for="rating-none">不限</label>
+    `;
+    ratingFilters.appendChild(noneOption);
     filters.rating_ranges.forEach(range => {
         const filterOption = document.createElement('div');
         filterOption.className = 'filter-option';
@@ -145,6 +152,9 @@ async function searchCoursesWithParams(params) {
             searchParams.credit = params.credit[0];
         }
         
+        // 添加include_reviews_count参数
+        searchParams.include_reviews_count = true;
+        
         const result = await searchCourses(searchParams);
         renderCourseList(result.courses);
         
@@ -182,7 +192,7 @@ function renderCourseList(items) {
                 </div>
             `;
         } else {
-            // 课程卡片
+            // 课程卡片 - 修复评价数显示
             courseCard.innerHTML = `
                 <div class="course-header">
                     <a href="/course.html?id=${item.id}" class="course-title">${item.name}</a>
@@ -460,6 +470,7 @@ function handleFilterChange(event) {
         keyword: searchInput.value.trim(),
         department: [],
         min_rating: null,
+        max_rating: null,
         credit: []
     };
     
@@ -468,11 +479,12 @@ function handleFilterChange(event) {
         filters.department.push(checkbox.value);
     });
     
-    // 获取选中的评分范围
+    // 修改评分范围处理逻辑
     const ratingRadio = document.querySelector('#ratingFilters input[type="radio"]:checked');
-    if (ratingRadio) {
+    if (ratingRadio && ratingRadio.value) {
         const [min, max] = ratingRadio.value.split('-').map(Number);
         filters.min_rating = min;
+        filters.max_rating = max;
     }
     
     // 获取选中的学分
@@ -493,9 +505,44 @@ function handleFilterChange(event) {
     currentSearchParams = cleanFilters;
     
     if (Object.keys(cleanFilters).length > 0) {
-        searchCoursesWithParams(cleanFilters);
+        // 修改为调用获取评价列表的函数，而不是搜索课程
+        loadFilteredReviews(cleanFilters);
     } else {
         loadLatestReviews();
+    }
+}
+
+async function loadFilteredReviews(filters) {
+    try {
+        isSearching = true;
+        courseList.innerHTML = '<div class="loading">加载评价中...</div>';
+        
+        // 构建查询参数
+        const query = {
+            limit: itemsPerPage,
+            offset: (currentPage - 1) * itemsPerPage
+        };
+        
+        // 添加筛选参数
+        if (filters.keyword) query.keyword = filters.keyword;
+        if (filters.department && filters.department.length > 0) {
+            query.department = filters.department.join(',');
+        }
+        if (filters.min_rating) query.min_rating = filters.min_rating;
+        if (filters.max_rating) query.max_rating = filters.max_rating;
+        if (filters.credit && filters.credit.length > 0) {
+            query.credit = filters.credit.join(',');
+        }
+        
+        // 调用获取评价列表的API
+        const response = await request('/reviews/filter', 'GET', { query });
+        
+        // 渲染评价列表
+        renderCourseList(response.reviews);
+        
+    } catch (error) {
+        console.error('获取评价列表失败:', error);
+        showError(new Error('获取评价列表失败: ' + error.message));
     }
 }
 

@@ -115,10 +115,18 @@ const getCourseDetail = (courseId) =>
     request(`/courses/${courseId}`);
 
 const searchCourses = (params) => 
-    request('/courses/search', 'GET', { query: params });
+    request('/courses/search', 'GET', { 
+        query: {
+            ...params,
+            include_stats: true  // 确保包含统计信息
+        } 
+    });
 
 // 筛选条件API
 const getFilterOptions = () => request('/filters');
+
+// 获取筛选评价的API
+const getFilteredReviews = (params) => request('/reviews/filter', 'GET', { query: params });
 
 // 系统API
 const getHealth = () => request('/health');
