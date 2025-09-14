@@ -154,8 +154,8 @@ async function handleReviewSubmit(e) {
     }
     
     // 验证内容长度
-    if (formData.content.length < 10) {
-        showError('评价内容至少需要10个字符');
+    if (formData.content.length < 5) {
+        showError('评价内容至少需要5个字符');
         return;
     }
     

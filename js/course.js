@@ -125,8 +125,8 @@ if (reviewForm) {
             return;
         }
         
-        if (formData.content.length < 10) {
-            formError.textContent = '评价内容至少需要10个字符';
+        if (formData.content.length < 5) {
+            formError.textContent = '评价内容至少需要5个字符';
             return;
         }
         

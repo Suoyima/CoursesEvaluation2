@@ -16,8 +16,8 @@
     <!-- 搜索区域 -->
     <div class="search-container">
         <div class="search-tabs">
-            <div class="search-tab active" data-type="course">按课程名称</div>
-            <div class="search-tab" data-type="teacher">按教师名称</div>
+            <div class="search-tab active" data-type="reviews">搜索评价</div>
+            <div class="search-tab" data-type="courses">搜索课程</div>
         </div>
         <input type="text" class="search-input" placeholder="搜索课程..." id="searchInput">
     </div>
@@ -34,12 +34,33 @@
                 </div>
             </div>
             
-            <div class="filter-section">
-                <div class="filter-title">评分范围</div>
-                <div id="ratingFilters">
-                    <!-- 评分筛选选项将通过JS动态加载 -->
-                </div>
-            </div>
+            <!-- 评分范围筛选选项 -->
+<div class="filter-section">
+    <div class="filter-title">评分范围</div>
+    <div id="ratingFilters">
+        <!-- 修改为使用min-max格式 -->
+        <div class="filter-option">
+            <input type="radio" id="rating-none" value="" name="rating" checked>
+            <label for="rating-none">不限</label>
+        </div>
+        <div class="filter-option">
+            <input type="radio" id="rating-4-5" value="4-5" name="rating">
+            <label for="rating-4-5">4-5星</label>
+        </div>
+        <div class="filter-option">
+            <input type="radio" id="rating-3-4" value="3-4" name="rating">
+            <label for="rating-3-4">3-4星</label>
+        </div>
+        <div class="filter-option">
+            <input type="radio" id="rating-2-3" value="2-3" name="rating">
+            <label for="rating-2-3">2-3星</label>
+        </div>
+        <div class="filter-option">
+            <input type="radio" id="rating-1-2" value="1-2" name="rating">
+            <label for="rating-1-2">1-2星</label>
+        </div>
+    </div>
+</div>
             
             <div class="filter-section">
                 <div class="filter-title">学分</div>

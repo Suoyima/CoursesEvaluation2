@@ -5,76 +5,188 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的评价</title>
     <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <style>
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        
+        .content {
+            width: 100%;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        
+        .page-header h1 {
+            font-size: 1.75rem;
+            color: var(--dark-color);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .page-header h1::before {
+            content: "✎";
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+        
         .review-item {
             background-color: white;
-            border: 1px solid #e1e4e8;
-            border-radius: 6px;
-            padding: 16px;
-            margin-bottom: 16px;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--box-shadow);
             position: relative;
+            overflow: hidden;
+        }
+        
+        .review-item::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--primary-color);
         }
         
         .review-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
         
         .review-course {
             font-weight: 600;
-            color: #0366d6;
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .review-course:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
         }
         
         .review-meta {
-            color: #586069;
-            font-size: 14px;
-            margin-bottom: 8px;
+            color: var(--gray-color);
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
         
         .review-content {
-            margin-bottom: 12px;
+            margin-bottom: 1rem;
+            line-height: 1.6;
         }
         
         .review-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 14px;
-            color: #586069;
+            font-size: 0.875rem;
+            color: var(--gray-color);
+        }
+        
+        .review-rating {
+            color: var(--warning-color);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
         }
         
         .delete-btn {
-            color: #cb2431;
+            color: var(--danger-color);
             cursor: pointer;
             background: none;
             border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .delete-btn:hover {
-            background-color: #ffeef0;
+            background-color: rgba(249, 65, 68, 0.1);
         }
         
         .no-reviews {
             text-align: center;
-            padding: 40px;
-            color: #586069;
+            padding: 3rem;
+            color: var(--gray-color);
+            font-size: 0.95rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .review-stats {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .review-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--gray-color);
+        }
+
+        .review-stat span {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- 顶部导航栏 -->
+    <!-- 现代化顶部导航栏 -->
     <header class="header">
         <div class="logo">我的评价</div>
-        
+        <img alt="用户头像" class="user-avatar" id="userAvatar">
     </header>
     
     <!-- 主要内容区域 -->
     <div class="container">
-        <div class="content" id="reviewsList">
-            <div class="loading">加载中...</div>
+        <div class="content">
+            <div class="page-header">
+                <h1>我的评价</h1>
+            </div>
+            
+            <div id="reviewsList">
+                <div class="loading">加载中...</div>
+            </div>
         </div>
     </div>
     

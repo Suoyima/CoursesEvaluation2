@@ -1,4 +1,4 @@
-import { getLatestReviews, getFilterOptions, searchCourses, getUserInfo, authAPI, setAuthToken } from './api.js';
+import { getLatestReviews, getFilterOptions, searchCourses, getUserInfo, authAPI, setAuthToken, request} from './api.js';
 import { formatDate, generateRatingStars, handleApiError } from './utils.js';
 
 // DOM元素
@@ -16,6 +16,7 @@ let currentSearchParams = {};
 let isSearching = false;
 let isLoggedIn = false;
 let currentUser = null;
+let currentSearchType = 'reviews'; // 添加当前搜索类型状态
 
 // 初始化页面
 document.addEventListener('DOMContentLoaded', async () => {
@@ -32,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 加载筛选条件
         await loadFilterOptions();
         
-        // 加载最新评价
+        // 默认加载最新评价
         await loadLatestReviews();
         
         // 监听登出事件
@@ -71,29 +72,40 @@ async function loadFilterOptions() {
 
 // 渲染筛选条件
 function renderFilterOptions(filters) {
-    // 渲染学院筛选
+    // 渲染学院筛选 - 改为单选
     const departmentFilters = document.getElementById('departmentFilters');
     departmentFilters.innerHTML = '';
+    
+    // 添加"不限"选项
+    const deptNoneOption = document.createElement('div');
+    deptNoneOption.className = 'filter-option';
+    deptNoneOption.innerHTML = `
+        <input type="radio" id="dept-none" value="" name="department" checked>
+        <label for="dept-none">不限</label>
+    `;
+    departmentFilters.appendChild(deptNoneOption);
+    
     filters.departments.forEach(dept => {
         const filterOption = document.createElement('div');
         filterOption.className = 'filter-option';
         filterOption.innerHTML = `
-            <input type="checkbox" id="dept-${dept}" value="${dept}" name="department">
+            <input type="radio" id="dept-${dept}" value="${dept}" name="department">
             <label for="dept-${dept}">${dept}</label>
         `;
         departmentFilters.appendChild(filterOption);
     });
     
-    // 渲染评分筛选
+    // 渲染评分筛选 - 已经是单选，保持不变
     const ratingFilters = document.getElementById('ratingFilters');
     ratingFilters.innerHTML = '';
-	const noneOption = document.createElement('div');
+    const noneOption = document.createElement('div');
     noneOption.className = 'filter-option';
     noneOption.innerHTML = `
         <input type="radio" id="rating-none" value="" name="rating" checked>
         <label for="rating-none">不限</label>
     `;
     ratingFilters.appendChild(noneOption);
+    
     filters.rating_ranges.forEach(range => {
         const filterOption = document.createElement('div');
         filterOption.className = 'filter-option';
@@ -104,14 +116,24 @@ function renderFilterOptions(filters) {
         ratingFilters.appendChild(filterOption);
     });
     
-    // 渲染学分筛选
+    // 渲染学分筛选 - 改为单选
     const creditFilters = document.getElementById('creditFilters');
     creditFilters.innerHTML = '';
+    
+    // 添加"不限"选项
+    const creditNoneOption = document.createElement('div');
+    creditNoneOption.className = 'filter-option';
+    creditNoneOption.innerHTML = `
+        <input type="radio" id="credit-none" value="" name="credit" checked>
+        <label for="credit-none">不限</label>
+    `;
+    creditFilters.appendChild(creditNoneOption);
+    
     filters.credits.forEach(credit => {
         const filterOption = document.createElement('div');
         filterOption.className = 'filter-option';
         filterOption.innerHTML = `
-            <input type="checkbox" id="credit-${credit}" value="${credit}" name="credit">
+            <input type="radio" id="credit-${credit}" value="${credit}" name="credit">
             <label for="credit-${credit}">${credit}学分</label>
         `;
         creditFilters.appendChild(filterOption);
@@ -128,7 +150,7 @@ async function loadLatestReviews() {
         courseList.innerHTML = '<div class="loading">加载最新评价中...</div>';
         
         const reviews = await getLatestReviews(itemsPerPage, (currentPage - 1) * itemsPerPage);
-        renderCourseList(reviews.reviews);
+        renderCourseList(reviews.reviews, 'reviews');
         
     } catch (error) {
         console.error('加载评价列表失败:', error);
@@ -136,80 +158,240 @@ async function loadLatestReviews() {
     }
 }
 
-// 搜索课程
-async function searchCoursesWithParams(params) {
+// 加载所有课程
+async function loadAllCourses(params = {}) {
     try {
         isSearching = true;
-        courseList.innerHTML = '<div class="loading">搜索课程中...</div>';
+        courseList.innerHTML = '<div class="loading">加载课程中...</div>';
         
-        const searchParams = {};
-        if (params.keyword) searchParams.keyword = params.keyword;
-        if (params.department && params.department.length > 0) {
-            searchParams.department = params.department[0];
-        }
-        if (params.min_rating) searchParams.min_rating = params.min_rating;
-        if (params.credit && params.credit.length > 0) {
-            searchParams.credit = params.credit[0];
-        }
+        // 确保评分范围参数正确传递
+        const searchParams = {
+            include_reviews_count: true,
+            ...params
+        };
         
-        // 添加include_reviews_count参数
-        searchParams.include_reviews_count = true;
+        // 如果只有min_rating或max_rating，确保另一个参数不被错误设置
+        if (searchParams.min_rating && !searchParams.max_rating) {
+            searchParams.max_rating = 5; // 默认最大值为5
+        }
+        if (searchParams.max_rating && !searchParams.min_rating) {
+            searchParams.min_rating = 1; // 默认最小值为1
+        }
         
         const result = await searchCourses(searchParams);
-        renderCourseList(result.courses);
+        renderCourseList(result.courses, 'courses');
         
     } catch (error) {
-        console.error('搜索课程失败:', error);
-        showError(new Error('搜索课程失败: ' + error.message));
+        console.error('加载课程失败:', error);
+        showError(new Error('加载课程失败: ' + error.message));
     }
 }
 
-// 渲染课程列表
-function renderCourseList(items) {
+// 加载筛选后的评价
+async function loadFilteredReviews(filters) {
+    try {
+        isSearching = true;
+        courseList.innerHTML = '<div class="loading">加载评价中...</div>';
+        
+        const query = {
+            limit: itemsPerPage,
+            offset: (currentPage - 1) * itemsPerPage
+        };
+        
+        // 添加筛选参数（使用单个值）
+        if (filters.keyword) query.keyword = filters.keyword;
+        if (filters.department) query.department = filters.department;
+        if (filters.min_rating) query.min_rating = filters.min_rating;
+        if (filters.max_rating) query.max_rating = filters.max_rating;
+        if (filters.credit) query.credit = filters.credit;
+        
+        const response = await request('/reviews/filter', 'GET', { query });
+        renderCourseList(response.reviews, 'reviews');
+        
+    } catch (error) {
+        console.error('获取评价列表失败:', error);
+        showError(new Error('获取评价列表失败: ' + error.message));
+    }
+}
+
+// 渲染课程/评价列表
+function renderCourseList(items, type) {
     if (items.length === 0) {
-        courseList.innerHTML = '<div class="error-message">没有找到相关课程</div>';
+        courseList.innerHTML = '<div class="error-message">没有找到相关内容</div>';
         return;
     }
     
     courseList.innerHTML = '';
     items.forEach(item => {
-        const courseCard = document.createElement('div');
-        courseCard.className = 'course-card';
+        const card = document.createElement('div');
+        card.className = 'course-card';
         
-        if (item.course_name) {
-            // 评价卡片
-            courseCard.innerHTML = `
+        if (type === 'reviews') {
+            // 评价卡片 - 修复用户名显示问题
+            const userName = item.user_name || item.username || item.user_name || '匿名用户';
+            const courseName = item.course_name || item.courseName || '未知课程';
+            const departmentName = item.department_name || item.department || '';
+            
+            card.innerHTML = `
                 <div class="course-header">
-                    <a href="/course.html?id=${item.course_id}" class="course-title">${item.course_name}</a>
+                    <a href="/course.html?id=${item.course_id || item.courseId}" class="course-title">${courseName}</a>
                     <div class="rating">${generateRatingStars(item.rating)}</div>
+                </div>
+                <div class="course-meta">
+                    ${departmentName ? departmentName + ' · ' : ''}难度: ${item.difficulty} | 给分: ${item.grading} | 收获: ${item.harvest}
                 </div>
                 <div class="course-description">
                     ${item.content || '暂无评价内容'}
                 </div>
                 <div class="course-footer">
-                    <span class="user">${item.user_name || '匿名用户'}</span>
-                    <span class="date">发布于 ${formatDate(item.created_at)}</span>
+                    <span class="user">${userName}</span>
+                    <span class="date">发布于 ${formatDate(item.created_at || item.createdAt)}</span>
                 </div>
             `;
         } else {
-            // 课程卡片 - 修复评价数显示
-            courseCard.innerHTML = `
+            // 课程卡片 - 确保使用统一的评分显示方式
+            const avgRating = item.avg_rating || 0;
+            const reviewCount = item.review_count || 0;
+            
+            card.innerHTML = `
                 <div class="course-header">
                     <a href="/course.html?id=${item.id}" class="course-title">${item.name}</a>
-                    <div class="rating">${generateRatingStars(item.avg_rating || 0)}</div>
+                    <div class="rating">${generateRatingStars(avgRating)}</div>
                 </div>
                 <div class="course-meta">
                     ${item.department || '未知院系'} · ${item.credit || 0}学分
                 </div>
                 <div class="course-stats">
-                    平均评分: ${item.avg_rating ? item.avg_rating.toFixed(1) : '暂无'}分 · 
-                    评价数: ${item.review_count || 0}
+                    平均评分: ${avgRating ? avgRating.toFixed(1) : '暂无'}分 · 
+                    评价数: ${reviewCount}
                 </div>
             `;
         }
         
-        courseList.appendChild(courseCard);
+        courseList.appendChild(card);
     });
+}
+
+// 搜索标签切换
+searchTabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+        searchTabs.forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        currentSearchType = this.dataset.type;
+        
+        // 更新搜索框提示文字
+        searchInput.placeholder = currentSearchType === 'reviews' ? '搜索评价...' : '搜索课程...';
+        
+        // 清空搜索输入框和筛选条件
+        searchInput.value = '';
+        clearFilters();
+        
+        // 根据当前类型加载内容
+        if (currentSearchType === 'reviews') {
+            loadLatestReviews();
+        } else {
+            loadAllCourses();
+        }
+    });
+});
+
+// 清空筛选条件
+function clearFilters() {
+    // 清空学院筛选（重置为"不限"）
+    document.querySelectorAll('#departmentFilters input[type="radio"]').forEach(radio => {
+        if (radio.value === '') {
+            radio.checked = true;
+        } else {
+            radio.checked = false;
+        }
+    });
+    
+    // 清空评分筛选（重置为"不限"）
+    document.querySelector('#rating-none').checked = true;
+    
+    // 清空学分筛选（重置为"不限"）
+    document.querySelectorAll('#creditFilters input[type="radio"]').forEach(radio => {
+        if (radio.value === '') {
+            radio.checked = true;
+        } else {
+            radio.checked = false;
+        }
+    });
+    
+    currentSearchParams = {};
+}
+
+// 搜索输入事件
+searchInput.addEventListener('keyup', (event) => {
+    if (event.key === 'Enter') {
+        const keyword = searchInput.value.trim();
+        
+        if (currentSearchType === 'reviews') {
+            // 搜索评价
+            currentSearchParams.keyword = keyword;
+            if (keyword) {
+                loadFilteredReviews(currentSearchParams);
+            } else {
+                loadLatestReviews();
+            }
+        } else {
+            // 搜索课程
+            currentSearchParams.keyword = keyword;
+            loadAllCourses(currentSearchParams);
+        }
+    }
+});
+
+// 筛选条件变化处理
+function handleFilterChange(event) {
+    const filters = {
+        keyword: searchInput.value.trim(),
+        department: null,
+        min_rating: null,
+        max_rating: null,
+        credit: null
+    };
+    
+    // 获取选中的学院（单选）
+    const selectedDept = document.querySelector('#departmentFilters input[type="radio"]:checked');
+    if (selectedDept && selectedDept.value) {
+        filters.department = selectedDept.value;
+    }
+    
+    // 处理评分范围 - 修改为使用min_rating和max_rating
+    const ratingRadio = document.querySelector('#ratingFilters input[type="radio"]:checked');
+    if (ratingRadio && ratingRadio.value) {
+        const [min, max] = ratingRadio.value.split('-').map(Number);
+        filters.min_rating = min;
+        filters.max_rating = max;
+    }
+    
+    // 获取选中的学分（单选）
+    const selectedCredit = document.querySelector('#creditFilters input[type="radio"]:checked');
+    if (selectedCredit && selectedCredit.value) {
+        filters.credit = parseInt(selectedCredit.value);
+    }
+    
+    // 清理空值
+    const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([_, v]) => 
+            v !== null && v !== undefined && v !== ''
+        )
+    );
+    
+    // 更新搜索参数
+    currentSearchParams = cleanFilters;
+    
+    // 根据当前类型应用筛选
+    if (currentSearchType === 'reviews') {
+        if (Object.keys(cleanFilters).length > 0) {
+            loadFilteredReviews(cleanFilters);
+        } else {
+            loadLatestReviews();
+        }
+    } else {
+        loadAllCourses(cleanFilters);
+    }
 }
 
 // 登录功能
@@ -463,109 +645,6 @@ function showUserMenu() {
         document.addEventListener('click', closeMenu);
     }, 100);
 }
-
-// 事件处理函数
-function handleFilterChange(event) {
-    const filters = {
-        keyword: searchInput.value.trim(),
-        department: [],
-        min_rating: null,
-        max_rating: null,
-        credit: []
-    };
-    
-    // 获取选中的学院
-    document.querySelectorAll('#departmentFilters input[type="checkbox"]:checked').forEach(checkbox => {
-        filters.department.push(checkbox.value);
-    });
-    
-    // 修改评分范围处理逻辑
-    const ratingRadio = document.querySelector('#ratingFilters input[type="radio"]:checked');
-    if (ratingRadio && ratingRadio.value) {
-        const [min, max] = ratingRadio.value.split('-').map(Number);
-        filters.min_rating = min;
-        filters.max_rating = max;
-    }
-    
-    // 获取选中的学分
-    document.querySelectorAll('#creditFilters input[type="checkbox"]:checked').forEach(checkbox => {
-        filters.credit.push(parseInt(checkbox.value));
-    });
-    
-    // 清理空值
-    const cleanFilters = Object.fromEntries(
-        Object.entries(filters).filter(([_, v]) => 
-            v !== null && v !== undefined && 
-            (!Array.isArray(v) || v.length > 0) &&
-            v !== ''
-        )
-    );
-    
-    // 更新搜索参数
-    currentSearchParams = cleanFilters;
-    
-    if (Object.keys(cleanFilters).length > 0) {
-        // 修改为调用获取评价列表的函数，而不是搜索课程
-        loadFilteredReviews(cleanFilters);
-    } else {
-        loadLatestReviews();
-    }
-}
-
-async function loadFilteredReviews(filters) {
-    try {
-        isSearching = true;
-        courseList.innerHTML = '<div class="loading">加载评价中...</div>';
-        
-        // 构建查询参数
-        const query = {
-            limit: itemsPerPage,
-            offset: (currentPage - 1) * itemsPerPage
-        };
-        
-        // 添加筛选参数
-        if (filters.keyword) query.keyword = filters.keyword;
-        if (filters.department && filters.department.length > 0) {
-            query.department = filters.department.join(',');
-        }
-        if (filters.min_rating) query.min_rating = filters.min_rating;
-        if (filters.max_rating) query.max_rating = filters.max_rating;
-        if (filters.credit && filters.credit.length > 0) {
-            query.credit = filters.credit.join(',');
-        }
-        
-        // 调用获取评价列表的API
-        const response = await request('/reviews/filter', 'GET', { query });
-        
-        // 渲染评价列表
-        renderCourseList(response.reviews);
-        
-    } catch (error) {
-        console.error('获取评价列表失败:', error);
-        showError(new Error('获取评价列表失败: ' + error.message));
-    }
-}
-
-// 搜索输入事件
-searchInput.addEventListener('keyup', (event) => {
-    if (event.key === 'Enter') {
-        currentSearchParams.keyword = searchInput.value.trim();
-        if (currentSearchParams.keyword) {
-            searchCoursesWithParams(currentSearchParams);
-        } else {
-            loadLatestReviews();
-        }
-    }
-});
-
-// 搜索标签切换
-searchTabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-        searchTabs.forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        currentSearchParams.type = this.dataset.type;
-    });
-});
 
 // 用户头像点击
 userAvatar.addEventListener('click', function() {
